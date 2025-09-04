@@ -1,11 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 public class Hex
 {
     // Variables
     public Hex tl, l, bl, tr, r, br; // Neighbors
     public Vector3Int cellPos;
+    public Tilemap tileMap;
 
     public enum PheromoneType
     {
@@ -43,5 +45,10 @@ public class Hex
         {
             pheromones[type] = 0;
         }
+    }
+
+    public Vector3 GetWorldPos()
+    {
+        return tileMap.CellToWorld(cellPos);
     }
 }

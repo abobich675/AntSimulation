@@ -25,12 +25,19 @@ public class SimulationControllerScript : MonoBehaviour
 
         // 1. Scan all cells in the tilemap bounds
         BoundsInt bounds = tileMap.cellBounds;
-        foreach (var pos in bounds.allPositionsWithin)
+
+        for (int x = bounds.xMin; x < bounds.xMax; x++)
         {
-            if (tileMap.HasTile(pos))
+            for (int y = bounds.yMin; y < bounds.yMax; y++)
             {
-                Hex hex = new Hex { cellPos = pos };
-                hexes[pos] = hex;
+                Vector3Int cellPosition = new Vector3Int(x, y, 0);
+                TileBase tile = tileMap.GetTile(cellPosition);
+
+                if (tile != null) // Only add if a tile exists at this position
+                {
+                    Hex hex = new Hex { cellPos = cellPosition, tileMap = tileMap};
+                    hexes[cellPosition] = hex;
+                }
             }
         }
 
@@ -40,44 +47,40 @@ public class SimulationControllerScript : MonoBehaviour
             Vector3Int pos = kvp.Key;
             Hex hex = kvp.Value;
 
-            // Offset coordinates depend on your hex layout
             if (tileMap.cellLayout == GridLayout.CellLayout.Hexagon)
             {
                 bool oddRow = (pos.y & 1) != 0;
 
-                Vector3Int[] neighborOffsets = oddRow
-                    ? new[] {
-                        new Vector3Int(-1,  1, 0), // tl
-                        new Vector3Int(-1,  0, 0), // l
-                        new Vector3Int(-1, -1, 0), // bl
-                        new Vector3Int( 0,  1, 0), // tr
-                        new Vector3Int( 1,  0, 0), // r
-                        new Vector3Int( 0, -1, 0), // br
+                Vector3Int[] offsets = oddRow
+                    ? new[]
+                    {
+                        new Vector3Int(0, 1, 0), // TL
+                        new Vector3Int(-1, 0, 0), // L
+                        new Vector3Int(0, -1, 0), // BL
+                        new Vector3Int(1, 1, 0),  // TR
+                        new Vector3Int(1, 0, 0),  // R
+                        new Vector3Int(1, -1, 0),  // BR
                     }
-                    : new[] {
-                        new Vector3Int( 0,  1, 0), // tl
-                        new Vector3Int(-1,  0, 0), // l
-                        new Vector3Int( 0, -1, 0), // bl
-                        new Vector3Int( 1,  1, 0), // tr
-                        new Vector3Int( 1,  0, 0), // r
-                        new Vector3Int( 1, -1, 0), // br
+                    : new[]
+                    {
+                        new Vector3Int(-1, 1, 0), // TL
+                        new Vector3Int(-1, 0, 0), // L
+                        new Vector3Int(-1, -1, 0), // BL
+                        new Vector3Int(0, 1, 0),  // TR
+                        new Vector3Int(1, 0, 0), // R
+                        new Vector3Int(0, -1, 0),  // BR
                     };
 
-                if (hexes.TryGetValue(pos + neighborOffsets[0], out var tl)) hex.tl = tl;
-                if (hexes.TryGetValue(pos + neighborOffsets[1], out var l)) hex.l = l;
-                if (hexes.TryGetValue(pos + neighborOffsets[2], out var bl)) hex.bl = bl;
-                if (hexes.TryGetValue(pos + neighborOffsets[3], out var tr)) hex.tr = tr;
-                if (hexes.TryGetValue(pos + neighborOffsets[4], out var r)) hex.r = r;
-                if (hexes.TryGetValue(pos + neighborOffsets[5], out var br)) hex.br = br;
+                if (hexes.TryGetValue(pos + offsets[0], out Hex tl)) hex.tl = tl;
+                if (hexes.TryGetValue(pos + offsets[1], out Hex l)) hex.l = l;
+                if (hexes.TryGetValue(pos + offsets[2], out Hex bl)) hex.bl = bl;
+                if (hexes.TryGetValue(pos + offsets[3], out Hex tr)) hex.tr = tr;
+                if (hexes.TryGetValue(pos + offsets[4], out Hex r)) hex.r = r;
+                if (hexes.TryGetValue(pos + offsets[5], out Hex br)) hex.br = br;
             }
         }
 
         Debug.Log($"Built {hexes.Count} hexes from the tilemap");
-    }
-
-    public Vector3 GetHexWorldPos(Hex hex)
-    {
-        return tileMap.CellToWorld(hex.cellPos);
     }
 
     // Spawn ants as spawn location up to global constant NUM_ANTS
@@ -89,16 +92,16 @@ public class SimulationControllerScript : MonoBehaviour
     private IEnumerator SpawnAntsCoroutine()
     {
         Vector3Int[] keys = hexes.Keys.ToArray();
-        Vector3Int spawnPos = keys[Random.Range(0, keys.Length)];
+        Hex spawnHex = hexes[keys[Random.Range(0, keys.Length)]];
 
         for (int i = 0; i < NUM_ANTS; i++)
         {
             GameObject newAnt = Instantiate(AntPrefab);
-            newAnt.transform.position = GetHexWorldPos(hexes[spawnPos]);;
+            newAnt.transform.position = spawnHex.GetWorldPos();
             AntScript script = newAnt.GetComponent<AntScript>();
             script.AttachDictionary(hexes);
-            script.currentHex = spawnPos;
-            ants.Append(script);
+            script.currHex = spawnHex;
+            ants.Add(script);
 
             yield return new WaitForSeconds(SPAWN_DELAY); // waits before next spawn
         }
@@ -123,7 +126,7 @@ public class SimulationControllerScript : MonoBehaviour
         while (true)
         {
             Tick(); // your update logic
-            yield return new WaitForSeconds(TICK_RATE);
+            yield return new WaitForSeconds(1/TICK_RATE);
         }
     }
 
