@@ -8,6 +8,7 @@ public class SimulationControllerScript : MonoBehaviour
 {
     public int NUM_ANTS;
     public float SPAWN_DELAY;
+    public float TICK_RATE;
 
 
     public GameObject AntPrefab;
@@ -15,6 +16,7 @@ public class SimulationControllerScript : MonoBehaviour
 
 
     private Dictionary<Vector3Int, Hex> hexes = new Dictionary<Vector3Int, Hex>();
+    private List<AntScript> ants = new List<AntScript>();
 
     // Create a Hex object for every filled tile in the tileMap. Store in hexes
     private void BuildGridFromTilemap()
@@ -73,6 +75,11 @@ public class SimulationControllerScript : MonoBehaviour
         Debug.Log($"Built {hexes.Count} hexes from the tilemap");
     }
 
+    public Vector3 GetHexWorldPos(Hex hex)
+    {
+        return tileMap.CellToWorld(hex.cellPos);
+    }
+
     // Spawn ants as spawn location up to global constant NUM_ANTS
     private void SpawnAnts()
     {
@@ -87,9 +94,11 @@ public class SimulationControllerScript : MonoBehaviour
         for (int i = 0; i < NUM_ANTS; i++)
         {
             GameObject newAnt = Instantiate(AntPrefab);
-            newAnt.transform.position = spawnPos;
+            newAnt.transform.position = GetHexWorldPos(hexes[spawnPos]);;
             AntScript script = newAnt.GetComponent<AntScript>();
             script.AttachDictionary(hexes);
+            script.currentHex = spawnPos;
+            ants.Append(script);
 
             yield return new WaitForSeconds(SPAWN_DELAY); // waits before next spawn
         }
@@ -107,16 +116,32 @@ public class SimulationControllerScript : MonoBehaviour
             }
         }
     }
+    
+    // Move to next tick
+    private IEnumerator SimulationLoop()
+    {
+        while (true)
+        {
+            Tick(); // your update logic
+            yield return new WaitForSeconds(TICK_RATE);
+        }
+    }
+
+    void Tick()
+    {
+        PheromoneDecay();
+
+        foreach (AntScript ant in ants)
+        {
+            ant.DoTick();
+        }
+    }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         BuildGridFromTilemap();
+        StartCoroutine(SimulationLoop());
         SpawnAnts();
-    }
-
-    void FixedUpdate()
-    {
-        PheromoneDecay();
     }
 }
