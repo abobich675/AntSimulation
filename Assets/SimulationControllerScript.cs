@@ -88,8 +88,23 @@ public class SimulationControllerScript : MonoBehaviour
         {
             GameObject newAnt = Instantiate(AntPrefab);
             newAnt.transform.position = spawnPos;
+            AntScript script = newAnt.GetComponent<AntScript>();
+            script.AttachDictionary(hexes);
 
             yield return new WaitForSeconds(SPAWN_DELAY); // waits before next spawn
+        }
+    }
+
+    // Decrease the amount of pheromone on a given tile by 1
+    void PheromoneDecay()
+    {
+        foreach (var kvp in hexes)
+        {
+            Hex hex = kvp.Value;
+            foreach (Hex.PheromoneType type in System.Enum.GetValues(typeof(Hex.PheromoneType)))
+            {
+                hex.AddPheromone(type, -1);
+            }
         }
     }
 
@@ -98,5 +113,10 @@ public class SimulationControllerScript : MonoBehaviour
     {
         BuildGridFromTilemap();
         SpawnAnts();
+    }
+
+    void FixedUpdate()
+    {
+        PheromoneDecay();
     }
 }

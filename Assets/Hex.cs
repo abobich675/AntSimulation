@@ -39,5 +39,9 @@ public class Hex
     public void AddPheromone(PheromoneType type, int amount)
     {
         pheromones[type] += amount;
+        if (pheromones[type] < 0)
+        {
+            pheromones[type] = 0;
+        }
     }
 }

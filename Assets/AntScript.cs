@@ -1,15 +1,16 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class AntScript : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+    private Dictionary<Vector3Int, Hex> hexes;
 
-    // Update is called once per frame
-    void Update()
+    public void AttachDictionary(Dictionary<Vector3Int, Hex> dict)
+    {
+        hexes = dict;
+    }
+    
+    void FixedUpdate()
     {
         
     }
