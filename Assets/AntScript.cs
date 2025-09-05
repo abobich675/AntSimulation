@@ -8,12 +8,12 @@ public class AntScript : MonoBehaviour
 
     public enum Directions
     {
-        Top_Left,
-        Left,
-        Bottom_Left,
         Top_Right,
         Right,
         Bottom_Right,
+        Bottom_Left,
+        Left,
+        Top_Left
     }
     private Directions currDirection;
 
@@ -40,9 +40,10 @@ public class AntScript : MonoBehaviour
 
     private Directions ChooseDirection()
     {
-        int adjustment = Random.Range(-1, 1);
+        int adjustment = Random.Range(-1, 2);
         int length = System.Enum.GetValues(typeof(Directions)).Length;
-        Directions newDirection = (Directions)(((int)currDirection + adjustment) % length);
+        Directions newDirection = (Directions)(((int)currDirection + adjustment + length) % length);
+        Debug.Log("Old Direction: " + currDirection + ", Adjustment: " + adjustment + ", New Direction: " + newDirection);
         return newDirection;
     }
 
@@ -68,13 +69,11 @@ public class AntScript : MonoBehaviour
         {
             currHex = targetHex;
             transform.position = targetHex.GetWorldPos();
+            currDirection = dir;
         }
         else
         {
-            int adjustment = 3;
-            int length = System.Enum.GetValues(typeof(Directions)).Length;
-            currDirection = (Directions)(((int)currDirection + adjustment) % length);
-            Debug.Log("Failed to Move");
+            Move(ChooseDirection());
         }
     }
 }
