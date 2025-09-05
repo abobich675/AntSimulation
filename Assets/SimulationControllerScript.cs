@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using Directions = Hex.Directions;
 
 public class SimulationControllerScript : MonoBehaviour
 {
@@ -35,8 +36,15 @@ public class SimulationControllerScript : MonoBehaviour
 
                 if (tile != null) // Only add if a tile exists at this position
                 {
-                    Hex hex = new Hex { cellPos = cellPosition, tileMap = tileMap};
+                    Hex hex = new Hex { cellPos = cellPosition, tileMap = tileMap };
                     hexes[cellPosition] = hex;
+
+                    // Attach null neighbors
+                    Directions[] dirs = (Directions[])System.Enum.GetValues(typeof(Directions));
+                    for (int i = 0; i < dirs.Length; i++)
+                    {
+                        hex.neighbors[dirs[i]] = null;
+                    }
                 }
             }
         }
@@ -54,29 +62,32 @@ public class SimulationControllerScript : MonoBehaviour
                 Vector3Int[] offsets = oddRow
                     ? new[]
                     {
-                        new Vector3Int(0, 1, 0), // TL
-                        new Vector3Int(-1, 0, 0), // L
-                        new Vector3Int(0, -1, 0), // BL
                         new Vector3Int(1, 1, 0),  // TR
                         new Vector3Int(1, 0, 0),  // R
                         new Vector3Int(1, -1, 0),  // BR
+                        new Vector3Int(0, -1, 0), // BL
+                        new Vector3Int(-1, 0, 0), // L
+                        new Vector3Int(0, 1, 0), // TL
                     }
                     : new[]
                     {
-                        new Vector3Int(-1, 1, 0), // TL
-                        new Vector3Int(-1, 0, 0), // L
-                        new Vector3Int(-1, -1, 0), // BL
                         new Vector3Int(0, 1, 0),  // TR
                         new Vector3Int(1, 0, 0), // R
                         new Vector3Int(0, -1, 0),  // BR
+                        new Vector3Int(-1, -1, 0), // BL
+                        new Vector3Int(-1, 0, 0), // L
+                        new Vector3Int(-1, 1, 0), // TL
                     };
 
-                if (hexes.TryGetValue(pos + offsets[0], out Hex tl)) hex.tl = tl;
-                if (hexes.TryGetValue(pos + offsets[1], out Hex l)) hex.l = l;
-                if (hexes.TryGetValue(pos + offsets[2], out Hex bl)) hex.bl = bl;
-                if (hexes.TryGetValue(pos + offsets[3], out Hex tr)) hex.tr = tr;
-                if (hexes.TryGetValue(pos + offsets[4], out Hex r)) hex.r = r;
-                if (hexes.TryGetValue(pos + offsets[5], out Hex br)) hex.br = br;
+                Directions[] dirs = (Directions[])System.Enum.GetValues(typeof(Directions));
+
+                for (int i = 0; i < dirs.Length; i++)
+                {
+                    if (hexes.TryGetValue(pos + offsets[i], out Hex neighbor))
+                    {
+                        hex.neighbors[dirs[i]] = neighbor;
+                    }
+                }
             }
         }
 

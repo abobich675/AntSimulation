@@ -1,15 +1,20 @@
 using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
 public class Hex
 {
-    // Variables
-    public Hex tl, l, bl, tr, r, br; // Neighbors
-    public Vector3Int cellPos;
-    public Tilemap tileMap;
+    // Enums
+    public enum Directions
+    {
+        Top_Right,
+        Right,
+        Bottom_Right,
+        Bottom_Left,
+        Left,
+        Top_Left
+    }
 
     public enum PheromoneType
     {
@@ -17,13 +22,24 @@ public class Hex
         Forage,
     }
 
+    static public Dictionary<PheromoneType, int> MAX_PHEROMONES = new Dictionary<PheromoneType, int>
+        {
+            { PheromoneType.Exploration, 400 },
+            { PheromoneType.Forage, 1 },
+        };
+
+    // Variables
+    public Dictionary<Directions, Hex> neighbors = new();
+    public Vector3Int cellPos;
+    public Tilemap tileMap;
+
     private Dictionary<PheromoneType, int> pheromones = new Dictionary<PheromoneType, int>();
 
     // Constructor
     public Hex()
     {
         // initialize all pheromone types with 0
-        foreach (PheromoneType type in System.Enum.GetValues(typeof(PheromoneType)))
+        foreach (PheromoneType type in Enum.GetValues(typeof(PheromoneType)))
         {
             pheromones[type] = 0;
         }
@@ -51,8 +67,8 @@ public class Hex
         if (!tileMap.HasTile(cellPos)) {
             Debug.LogWarning($"No tile found at {cellPos}");
         }
-        float red = Math.Min(GetPheromone(PheromoneType.Exploration) / 400f, 1);
-        red = Math.Max(red, 0.3f);
+        float red = GetPheromone(PheromoneType.Exploration) / (float)MAX_PHEROMONES[PheromoneType.Exploration] * 0.75f;
+        red = Math.Max( Math.Min(red, 1), 0.3f );
         tileMap.SetColor(cellPos, new Color(red, 0.3f, 0.3f));
     }
 

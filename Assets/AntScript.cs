@@ -1,29 +1,22 @@
+using System;
 using System.Collections.Generic;
-using UnityEditor;
+using System.Linq;
 using UnityEngine;
+using Random = UnityEngine.Random;
+using Directions = Hex.Directions;
+using PheromoneType = Hex.PheromoneType;
 
 public class AntScript : MonoBehaviour
 {
     private Dictionary<Vector3Int, Hex> hexes;
     public Hex currHex;
-
-    public enum Directions
-    {
-        Top_Right,
-        Right,
-        Bottom_Right,
-        Bottom_Left,
-        Left,
-        Top_Left
-    }
     private Directions currDirection;
-
-    public Hex.PheromoneType pheromoneMode;
+    public PheromoneType pheromoneMode;
 
     void Start()
     {
-        currDirection = (Directions)System.Enum.GetValues(typeof(Directions))
-            .GetValue(Random.Range(0, System.Enum.GetValues(typeof(Directions)).Length));
+        currDirection = (Directions)Enum.GetValues(typeof(Directions))
+            .GetValue(Random.Range(0, Enum.GetValues(typeof(Directions)).Length));
     }
 
     public void AttachDictionary(Dictionary<Vector3Int, Hex> dict)
@@ -31,12 +24,64 @@ public class AntScript : MonoBehaviour
         hexes = dict;
     }
 
+    private float EvaluateHex(Hex hex)
+    {
+        if (hex == null)
+        {
+            return 0;
+        }
+
+        float score = 1;
+
+        if (pheromoneMode == PheromoneType.Exploration)
+        {
+            float explorationCount = hex.GetPheromone(PheromoneType.Exploration);
+            score *= Hex.MAX_PHEROMONES[PheromoneType.Exploration] / Math.Max(explorationCount, 1);
+        }
+        
+        int length = Enum.GetValues(typeof(Directions)).Length;
+        Directions leftTurn = (Directions)(((int)currDirection - 1 + length) % length);
+        Directions rightTurn = (Directions)(((int)currDirection + 1 + length) % length);
+        if (currHex.neighbors[leftTurn] == hex ||
+            currHex.neighbors[rightTurn] == hex ||
+            currHex.neighbors[currDirection] == hex)
+        {
+            score *= 1.5f;
+        }
+
+            return score;
+    }
+
     private Directions ChooseDirection()
     {
-        int adjustment = Random.Range(-1, 2);
-        int length = System.Enum.GetValues(typeof(Directions)).Length;
-        Directions newDirection = (Directions)(((int)currDirection + adjustment + length) % length);
-        return newDirection;
+        Dictionary<Directions, float> options =
+            ((Directions[])Enum.GetValues(typeof(Directions)))
+            .ToDictionary(d => d, d => 1f);
+
+        float totalScore = 0;
+        foreach (Directions dir in (Directions[])Enum.GetValues(typeof(Directions)))
+        {
+            options[dir] = EvaluateHex(currHex.neighbors[dir]);
+            totalScore += options[dir];
+        }
+
+        float chosenDirFloat = Random.Range(0, totalScore);
+        Directions chosenDirection = Directions.Top_Right;
+        float scoreCount = 0;
+        foreach (Directions dir in (Directions[])Enum.GetValues(typeof(Directions)))
+        {
+            scoreCount += options[dir];
+            if (scoreCount > chosenDirFloat)
+            {
+                chosenDirection = dir;
+                break;
+            }
+        }
+
+        // Debug.Log("Options: " + string.Join(", ", options.Select(kvp => $"{kvp.Key}:{kvp.Value}")));
+        // Debug.Log("Chosen: " + chosenDirFloat + ", " + chosenDirection);
+
+        return chosenDirection;
     }
 
     private void Move(Directions dir)
@@ -44,29 +89,18 @@ public class AntScript : MonoBehaviour
         if (currHex == null)
             return;
 
-        Hex targetHex;
+        Hex targetHex = currHex.neighbors[dir];
 
-        switch (dir)
+        if (targetHex == null)
         {
-            case Directions.Top_Left: targetHex = currHex.tl; break;
-            case Directions.Left: targetHex = currHex.l; break;
-            case Directions.Bottom_Left: targetHex = currHex.bl; break;
-            case Directions.Top_Right: targetHex = currHex.tr; break;
-            case Directions.Right: targetHex = currHex.r; break;
-            case Directions.Bottom_Right: targetHex = currHex.br; break;
-            default: return;
+            currDirection = dir;
+            // Move(ChooseDirection());
         }
-
-        if (targetHex != null)
+        else
         {
             currHex = targetHex;
             transform.position = targetHex.GetWorldPos();
             currDirection = dir;
-        }
-        else
-        {
-            currDirection = dir;
-            Move(ChooseDirection());
         }
     }
 
@@ -79,6 +113,7 @@ public class AntScript : MonoBehaviour
 
         Move(ChooseDirection());
         transform.rotation = Quaternion.Euler(0, 0, -30 - (int)currDirection * 60);
-        currHex.SetPheromone(pheromoneMode, 200);
+        currHex.SetPheromone(pheromoneMode, Hex.MAX_PHEROMONES[PheromoneType.Exploration]);
+
     }
 }
