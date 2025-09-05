@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -27,7 +29,7 @@ public class Hex
         }
     }
 
-    // Functions
+    // Methods
     public int GetPheromone(PheromoneType type)
     {
         return pheromones[type];
@@ -45,6 +47,13 @@ public class Hex
         {
             pheromones[type] = 0;
         }
+
+        if (!tileMap.HasTile(cellPos)) {
+            Debug.LogWarning($"No tile found at {cellPos}");
+        }
+        float red = Math.Min(GetPheromone(PheromoneType.Exploration) / 400f, 1);
+        red = Math.Max(red, 0.3f);
+        tileMap.SetColor(cellPos, new Color(red, 0.3f, 0.3f));
     }
 
     public Vector3 GetWorldPos()

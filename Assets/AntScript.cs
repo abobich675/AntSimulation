@@ -1,9 +1,9 @@
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 public class AntScript : MonoBehaviour
 {
-    public int multiplier;
     private Dictionary<Vector3Int, Hex> hexes;
     public Hex currHex;
 
@@ -17,6 +17,8 @@ public class AntScript : MonoBehaviour
         Top_Left
     }
     private Directions currDirection;
+
+    public Hex.PheromoneType pheromoneMode;
 
     void Start()
     {
@@ -34,7 +36,6 @@ public class AntScript : MonoBehaviour
         int adjustment = Random.Range(-1, 2);
         int length = System.Enum.GetValues(typeof(Directions)).Length;
         Directions newDirection = (Directions)(((int)currDirection + adjustment + length) % length);
-        Debug.Log("Old Direction: " + currDirection + ", Adjustment: " + adjustment + ", New Direction: " + newDirection);
         return newDirection;
     }
 
@@ -78,5 +79,6 @@ public class AntScript : MonoBehaviour
 
         Move(ChooseDirection());
         transform.rotation = Quaternion.Euler(0, 0, -30 - (int)currDirection * 60);
+        currHex.SetPheromone(pheromoneMode, 200);
     }
 }
