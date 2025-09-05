@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class AntScript : MonoBehaviour
 {
+    public int multiplier;
     private Dictionary<Vector3Int, Hex> hexes;
     public Hex currHex;
 
@@ -26,16 +27,6 @@ public class AntScript : MonoBehaviour
     public void AttachDictionary(Dictionary<Vector3Int, Hex> dict)
     {
         hexes = dict;
-    }
-
-    public void DoTick()
-    {
-        if (hexes == null)
-        {
-            return;
-        }
-
-        Move(ChooseDirection());
     }
 
     private Directions ChooseDirection()
@@ -73,7 +64,19 @@ public class AntScript : MonoBehaviour
         }
         else
         {
+            currDirection = dir;
             Move(ChooseDirection());
         }
+    }
+
+    public void DoTick()
+    {
+        if (hexes == null)
+        {
+            return;
+        }
+
+        Move(ChooseDirection());
+        transform.rotation = Quaternion.Euler(0, 0, -30 - (int)currDirection * 60);
     }
 }
