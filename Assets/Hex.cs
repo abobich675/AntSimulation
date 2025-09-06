@@ -24,7 +24,7 @@ public class Hex
 
     static public Dictionary<PheromoneType, int> MAX_PHEROMONES = new Dictionary<PheromoneType, int>
         {
-            { PheromoneType.Exploration, 400 },
+            { PheromoneType.Exploration, 300 },
             { PheromoneType.Forage, 1 },
         };
 
@@ -64,16 +64,40 @@ public class Hex
             pheromones[type] = 0;
         }
 
-        if (!tileMap.HasTile(cellPos)) {
+        if (!tileMap.HasTile(cellPos))
+        {
             Debug.LogWarning($"No tile found at {cellPos}");
         }
         float red = GetPheromone(PheromoneType.Exploration) / (float)MAX_PHEROMONES[PheromoneType.Exploration] * 0.75f;
-        red = Math.Max( Math.Min(red, 1), 0.3f );
+        red = Math.Max(Math.Min(red, 1), 0.3f);
         tileMap.SetColor(cellPos, new Color(red, 0.3f, 0.3f));
     }
 
     public Vector3 GetWorldPos()
     {
         return tileMap.CellToWorld(cellPos);
+    }
+
+    private void SpreadPheromones()
+    {
+        foreach (var kvp in neighbors)
+        {
+            Hex hex = kvp.Value;
+            if (hex == null)
+            {
+                continue;
+            }
+
+            foreach (PheromoneType type in Enum.GetValues(typeof(PheromoneType)))
+            {
+                hex.AddPheromone(type, pheromones[type] / 250);
+                AddPheromone(type, -pheromones[type] / 250);
+            }
+        }
+    }
+
+    public void DoTick()
+    {
+        SpreadPheromones();
     }
 }

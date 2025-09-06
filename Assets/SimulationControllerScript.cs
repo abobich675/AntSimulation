@@ -149,6 +149,12 @@ public class SimulationControllerScript : MonoBehaviour
         {
             ant.DoTick();
         }
+
+        foreach (var kvp in hexes)
+        {
+            Hex hex = kvp.Value;
+            hex.DoTick();
+        }
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created

@@ -36,7 +36,7 @@ public class AntScript : MonoBehaviour
         if (pheromoneMode == PheromoneType.Exploration)
         {
             float explorationCount = hex.GetPheromone(PheromoneType.Exploration);
-            score *= Hex.MAX_PHEROMONES[PheromoneType.Exploration] / Math.Max(explorationCount, 1);
+            score *= Hex.MAX_PHEROMONES[PheromoneType.Exploration] / (float)Math.Pow(Math.Max(explorationCount, 1), 2);
         }
         
         int length = Enum.GetValues(typeof(Directions)).Length;
