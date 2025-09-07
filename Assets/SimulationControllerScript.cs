@@ -14,6 +14,7 @@ public class SimulationControllerScript : MonoBehaviour
 
     public GameObject AntPrefab;
     public Tilemap tileMap;
+    public Tilemap foodMap;
 
 
     private Dictionary<Vector3Int, Hex> hexes = new Dictionary<Vector3Int, Hex>();
@@ -45,6 +46,10 @@ public class SimulationControllerScript : MonoBehaviour
                     {
                         hex.neighbors[dirs[i]] = null;
                     }
+
+                    // Check for food
+                    TileBase foodTile = foodMap.GetTile(cellPosition);
+                    hex.foodValue = (foodTile != null) ? Hex.MAX_PHEROMONES[Hex.PheromoneType.Food] : 0;
                 }
             }
         }
@@ -126,6 +131,7 @@ public class SimulationControllerScript : MonoBehaviour
             Hex hex = kvp.Value;
             foreach (Hex.PheromoneType type in System.Enum.GetValues(typeof(Hex.PheromoneType)))
             {
+                if (type == Hex.PheromoneType.Food) continue;
                 hex.AddPheromone(type, -1);
             }
         }
@@ -154,6 +160,12 @@ public class SimulationControllerScript : MonoBehaviour
         {
             Hex hex = kvp.Value;
             hex.DoTick();
+        }
+
+        foreach (var kvp in hexes)
+        {
+            Hex hex = kvp.Value;
+            hex.ApplyTick();
         }
     }
 
