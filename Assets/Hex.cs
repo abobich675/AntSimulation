@@ -25,16 +25,16 @@ public class Hex
 
     static public Dictionary<PheromoneType, float> MAX_PHEROMONES = new Dictionary<PheromoneType, float>
     {
-        { PheromoneType.Exploration, 300 },
+        { PheromoneType.Exploration, 1000 },
         { PheromoneType.Forage, 1 },
-        { PheromoneType.Food, 10 },
+        { PheromoneType.Food, 100 },
     };
 
     static public Dictionary<PheromoneType, float> SPREAD_PHEROMONES = new Dictionary<PheromoneType, float>
     {
-        { PheromoneType.Exploration, 0.0005f },
+        { PheromoneType.Exploration, 0.001f },
         { PheromoneType.Forage, 0.001f },
-        { PheromoneType.Food, 0.0001f },
+        { PheromoneType.Food, 0.1f },
     };
 
     // Variables
@@ -146,7 +146,8 @@ public class Hex
             {
                 pheromones[type] = MAX_PHEROMONES[type];
             }
-        
+
+            changes[type] = 0;
         }
         HandleColor();
     }
