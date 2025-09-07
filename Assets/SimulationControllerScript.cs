@@ -149,7 +149,6 @@ public class SimulationControllerScript : MonoBehaviour
 
     void Tick()
     {
-        PheromoneDecay();
 
         foreach (AntScript ant in ants)
         {
@@ -162,6 +161,8 @@ public class SimulationControllerScript : MonoBehaviour
             hex.DoTick();
         }
 
+        PheromoneDecay();
+        
         foreach (var kvp in hexes)
         {
             Hex hex = kvp.Value;

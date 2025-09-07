@@ -23,18 +23,18 @@ public class Hex
         Food,
     }
 
-    static public Dictionary<PheromoneType, int> MAX_PHEROMONES = new Dictionary<PheromoneType, int>
+    static public Dictionary<PheromoneType, float> MAX_PHEROMONES = new Dictionary<PheromoneType, float>
     {
         { PheromoneType.Exploration, 300 },
         { PheromoneType.Forage, 1 },
-        { PheromoneType.Food, 100 },
+        { PheromoneType.Food, 10 },
     };
 
     static public Dictionary<PheromoneType, float> SPREAD_PHEROMONES = new Dictionary<PheromoneType, float>
     {
         { PheromoneType.Exploration, 0.0005f },
         { PheromoneType.Forage, 0.001f },
-        { PheromoneType.Food, 0.01f },
+        { PheromoneType.Food, 0.0001f },
     };
 
     // Variables
@@ -42,10 +42,10 @@ public class Hex
     public Vector3Int cellPos;
     public Tilemap tileMap;
 
-    private Dictionary<PheromoneType, int> pheromones = new Dictionary<PheromoneType, int>();
-    public int foodValue;
+    private Dictionary<PheromoneType, float> pheromones = new();
+    public float foodValue;
 
-    private Dictionary<PheromoneType, int> changes = new();
+    private Dictionary<PheromoneType, float> changes = new();
 
     // Constructor
     public Hex()
@@ -59,17 +59,17 @@ public class Hex
     }
 
     // Methods
-    public int GetPheromone(PheromoneType type)
+    public float GetPheromone(PheromoneType type)
     {
         return pheromones[type];
     }
 
-    public void SetPheromone(PheromoneType type, int value)
+    public void SetPheromone(PheromoneType type, float value)
     {
         changes[type] = value - pheromones[type];
     }
 
-    public void AddPheromone(PheromoneType type, int amount)
+    public void AddPheromone(PheromoneType type, float amount)
     {
         changes[type] += amount;
         if (!tileMap.HasTile(cellPos))
@@ -97,7 +97,7 @@ public class Hex
 
         foreach (PheromoneType type in Enum.GetValues(typeof(PheromoneType)))
         {
-            int spread = (int)Math.Floor(pheromones[type] * SPREAD_PHEROMONES[type]);
+            float spread = pheromones[type] * SPREAD_PHEROMONES[type];
 
             foreach (var kvp in neighbors)
             {
@@ -140,6 +140,11 @@ public class Hex
             if (pheromones[type] < 0)
             {
                 pheromones[type] = 0;
+            }
+
+            if (pheromones[type] > MAX_PHEROMONES[type])
+            {
+                pheromones[type] = MAX_PHEROMONES[type];
             }
         
         }
