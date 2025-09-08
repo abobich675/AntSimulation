@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Collections;
+using Unity.VisualScripting.Dependencies.NCalc;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using Directions = Hex.Directions;
@@ -10,15 +12,19 @@ public class SimulationControllerScript : MonoBehaviour
     public int NUM_ANTS;
     public float SPAWN_DELAY;
     public float TICK_RATE;
+    public float CARRYING_CAPACITY;
+    public int ANTHILL_SIZE;
 
 
     public GameObject AntPrefab;
-    public Tilemap tileMap;
+    public Tile anthillTile;
     public Tilemap foodMap;
+    public Tilemap anthillMap;
+    public Tilemap tileMap;
 
-
-    private Dictionary<Vector3Int, Hex> hexes = new Dictionary<Vector3Int, Hex>();
-    private List<AntScript> ants = new List<AntScript>();
+    private Dictionary<Vector3Int, Hex> hexes = new();
+    private List<AntScript> ants = new();
+    private List<Hex> anthillHexes = new();
 
     // Create a Hex object for every filled tile in the tileMap. Store in hexes
     private void BuildGridFromTilemap()
@@ -37,19 +43,13 @@ public class SimulationControllerScript : MonoBehaviour
 
                 if (tile != null) // Only add if a tile exists at this position
                 {
-                    Hex hex = new Hex { cellPos = cellPosition, tileMap = tileMap };
-                    hexes[cellPosition] = hex;
-
-                    // Attach null neighbors
-                    Directions[] dirs = (Directions[])System.Enum.GetValues(typeof(Directions));
-                    for (int i = 0; i < dirs.Length; i++)
-                    {
-                        hex.neighbors[dirs[i]] = null;
-                    }
-
                     // Check for food
                     TileBase foodTile = foodMap.GetTile(cellPosition);
-                    hex.foodValue = (foodTile != null) ? Hex.MAX_PHEROMONES[Hex.PheromoneType.Food] : 0;
+                    float foodValue = (foodTile != null) ? Hex.MAX_PHEROMONES[Hex.PheromoneType.Food] : 0;
+
+                    // Create Hex
+                    Hex hex = new Hex(tileMap, cellPosition, foodValue);
+                    hexes[cellPosition] = hex;
                 }
             }
         }
@@ -99,6 +99,38 @@ public class SimulationControllerScript : MonoBehaviour
         Debug.Log($"Built {hexes.Count} hexes from the tilemap");
     }
 
+    private void PlaceAnthill()
+    {
+        Vector3Int[] keys = hexes.Keys.ToArray();
+        Hex anthillHex = hexes[keys[Random.Range(0, keys.Length)]];
+        anthillHex.isAnthill = true;
+        anthillHexes.Add(anthillHex);
+        anthillMap.SetTile(anthillHex.cellPos, anthillTile);
+
+        // Expand anthill
+        for (int i = 0; i < ANTHILL_SIZE; i++)
+        {
+            List<Hex> neighborsToAdd = new();
+            foreach (Hex hex in anthillHexes)
+            {
+                foreach (var kvp in hex.neighbors)
+                {
+                    Hex neighbor = kvp.Value;
+                    if (neighbor == null) continue;
+
+                    if (!anthillHexes.Contains(neighbor) && !neighborsToAdd.Contains(neighbor))
+                    {
+                        neighborsToAdd.Add(neighbor);
+                        anthillMap.SetTile(hex.cellPos, anthillTile);
+                    }
+                }
+            }
+            anthillHexes.AddRange(neighborsToAdd.Except(anthillHexes));
+        }
+
+
+    }
+
     // Spawn ants as spawn location up to global constant NUM_ANTS
     private void SpawnAnts()
     {
@@ -107,16 +139,15 @@ public class SimulationControllerScript : MonoBehaviour
 
     private IEnumerator SpawnAntsCoroutine()
     {
-        Vector3Int[] keys = hexes.Keys.ToArray();
-        Hex spawnHex = hexes[keys[Random.Range(0, keys.Length)]];
-
         for (int i = 0; i < NUM_ANTS; i++)
         {
+            Hex spawnHex = anthillHexes[Random.Range(0, anthillHexes.Count - 1)];
             GameObject newAnt = Instantiate(AntPrefab);
             newAnt.transform.position = spawnHex.GetWorldPos();
             AntScript script = newAnt.GetComponent<AntScript>();
             script.AttachDictionary(hexes);
             script.currHex = spawnHex;
+            script.carrying_capacity = CARRYING_CAPACITY;
             ants.Add(script);
 
             yield return new WaitForSeconds(SPAWN_DELAY); // waits before next spawn
@@ -162,7 +193,7 @@ public class SimulationControllerScript : MonoBehaviour
         }
 
         PheromoneDecay();
-        
+
         foreach (var kvp in hexes)
         {
             Hex hex = kvp.Value;
@@ -174,6 +205,7 @@ public class SimulationControllerScript : MonoBehaviour
     void Start()
     {
         BuildGridFromTilemap();
+        PlaceAnthill();
         StartCoroutine(SimulationLoop());
         SpawnAnts();
     }

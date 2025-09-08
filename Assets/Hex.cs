@@ -26,7 +26,7 @@ public class Hex
     static public Dictionary<PheromoneType, float> MAX_PHEROMONES = new Dictionary<PheromoneType, float>
     {
         { PheromoneType.Exploration, 1000 },
-        { PheromoneType.Forage, 1 },
+        { PheromoneType.Forage, 1000 },
         { PheromoneType.Food, 100 },
     };
 
@@ -44,17 +44,29 @@ public class Hex
 
     private Dictionary<PheromoneType, float> pheromones = new();
     public float foodValue;
+    public bool isAnthill;
 
     private Dictionary<PheromoneType, float> changes = new();
 
     // Constructor
-    public Hex()
+    public Hex(Tilemap tileMap, Vector3Int cellPos, float foodValue)
     {
-        // initialize all pheromone types with 0
+        this.tileMap = tileMap;
+        this.cellPos = cellPos;
+        this.foodValue = foodValue;
+        
+        // Initialize all pheromone types with 0
         foreach (PheromoneType type in Enum.GetValues(typeof(PheromoneType)))
         {
             pheromones[type] = 0;
             changes[type] = 0;
+        }
+
+        // Initialize neighbors to null
+        Directions[] dirs = (Directions[])System.Enum.GetValues(typeof(Directions));
+        for (int i = 0; i < dirs.Length; i++)
+        {
+            neighbors[dirs[i]] = null;
         }
     }
 
