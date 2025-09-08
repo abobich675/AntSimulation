@@ -8,13 +8,15 @@ using PheromoneType = Hex.PheromoneType;
 
 public class AntScript : MonoBehaviour
 {
-    public float carrying_capacity;
-    private float foodCarried;
     private Dictionary<Vector3Int, Hex> hexes;
-    public Hex currHex;
-    private Directions currDirection;
-    public PheromoneType pheromoneMode;
+    public float carrying_capacity;
 
+    // State
+    private Hex currHex;
+    private Directions currDirection;
+    private float foodCarried;
+    private PheromoneType pheromoneMode;
+    
     void Start()
     {
         currDirection = (Directions)Enum.GetValues(typeof(Directions))
@@ -23,9 +25,10 @@ public class AntScript : MonoBehaviour
         foodCarried = 0;
     }
 
-    public void AttachDictionary(Dictionary<Vector3Int, Hex> dict)
+    public void Initialize(Dictionary<Vector3Int, Hex> dict, Hex spawnHex)
     {
         hexes = dict;
+        currHex = spawnHex;
     }
 
     private float EvaluateHex(Hex hex)
@@ -131,7 +134,6 @@ public class AntScript : MonoBehaviour
         if (targetHex == null)
         {
             currDirection = dir;
-            // Move(ChooseDirection());
         }
         else
         {

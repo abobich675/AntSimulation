@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -166,12 +165,12 @@ public class Hex
 
     private void HandleColor()
     {
-        float red = GetPheromone(PheromoneType.Exploration) / (float)MAX_PHEROMONES[PheromoneType.Exploration] * 0.75f;
+        float red = GetPheromone(PheromoneType.Exploration) / (float)MAX_PHEROMONES[PheromoneType.Exploration] * 0.5f;
         red = Math.Max(Math.Min(red, 1), 0.3f);
-        float green = GetPheromone(PheromoneType.Food) / (float)MAX_PHEROMONES[PheromoneType.Food] * 0.75f;
+        float green = GetPheromone(PheromoneType.Food) / (float)MAX_PHEROMONES[PheromoneType.Food] * 0.5f;
         // green += GetPheromone(PheromoneType.Hill) / (float)MAX_PHEROMONES[PheromoneType.Hill] * 0.75f;
         green = Math.Max(Math.Min(green, 1), 0.3f);
-        float blue = GetPheromone(PheromoneType.Forage) / (float)MAX_PHEROMONES[PheromoneType.Forage] * 0.75f;
+        float blue = GetPheromone(PheromoneType.Forage) / (float)MAX_PHEROMONES[PheromoneType.Forage] * 0.5f;
         blue = Math.Max(Math.Min(blue, 1), 0.3f);
 
         tileMap.SetColor(cellPos, new Color(red, green, blue));

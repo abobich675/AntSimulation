@@ -100,3 +100,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 578a8fdeb364f42b8845b03c0c3c8c75, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  carrying_capacity: 0
+  pheromoneMode: 0

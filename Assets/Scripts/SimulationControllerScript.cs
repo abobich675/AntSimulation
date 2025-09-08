@@ -1,27 +1,27 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.Collections;
-using Unity.VisualScripting.Dependencies.NCalc;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using Directions = Hex.Directions;
 
 public class SimulationControllerScript : MonoBehaviour
 {
+    // Adjustables
     public int NUM_ANTS;
     public float SPAWN_DELAY;
     public float TICK_RATE;
     public float CARRYING_CAPACITY;
     public int ANTHILL_SIZE;
 
-
+    // Assets
     public GameObject AntPrefab;
     public Tile anthillTile;
     public Tilemap foodMap;
     public Tilemap anthillMap;
     public Tilemap tileMap;
 
+    // Data Structures
     private Dictionary<Vector3Int, Hex> hexes = new();
     private List<AntScript> ants = new();
     private List<Hex> anthillHexes = new();
@@ -146,8 +146,7 @@ public class SimulationControllerScript : MonoBehaviour
             GameObject newAnt = Instantiate(AntPrefab);
             newAnt.transform.position = spawnHex.GetWorldPos();
             AntScript script = newAnt.GetComponent<AntScript>();
-            script.AttachDictionary(hexes);
-            script.currHex = spawnHex;
+            script.Initialize(hexes, spawnHex);
             script.carrying_capacity = CARRYING_CAPACITY;
             ants.Add(script);
 
