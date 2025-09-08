@@ -44,18 +44,31 @@ public class AntScript : MonoBehaviour
                 float explorationCount = Math.Max(hex.GetPheromone(PheromoneType.Exploration), 1);
                 score *= Hex.MAX_PHEROMONES[PheromoneType.Exploration] / explorationCount;
 
+                // Avoid home
+                if (hex.isAnthill) score /= 10;
+
+                // Go towards forage
+                float forageCount = Math.Max(hex.GetPheromone(PheromoneType.Forage), 1);
+                score *= (float)Math.Pow(forageCount, 2) / Hex.MAX_PHEROMONES[PheromoneType.Forage];
+
                 // Do go towards food
                 float foodCount = hex.GetPheromone(PheromoneType.Food) + 1;
-                score *= (float)Math.Pow(foodCount, 2) / Hex.MAX_PHEROMONES[PheromoneType.Food];
+                score *= (float)Math.Pow(foodCount, 5) / Hex.MAX_PHEROMONES[PheromoneType.Food];
 
                 float isFood = hex.foodValue + 1;
-                score *= (float)Math.Pow(isFood, 3) / Hex.MAX_PHEROMONES[PheromoneType.Food];
+                score *= (float)Math.Pow(isFood, 5) / Hex.MAX_PHEROMONES[PheromoneType.Food];
                 break;
             
             case PheromoneType.Forage:
-                // Don't go where you've already explored
+                // Follow your path home
                 explorationCount = Math.Max(hex.GetPheromone(PheromoneType.Exploration), 1);
                 score *= explorationCount / Hex.MAX_PHEROMONES[PheromoneType.Exploration];
+
+                // Go home if available
+                float hillCount = hex.GetPheromone(PheromoneType.Hill) + 1;
+                score *= (float)Math.Pow(hillCount, 2) / Hex.MAX_PHEROMONES[PheromoneType.Hill];
+                if (hex.isAnthill) score *= 10000;
+
                 break;
 
             default:
@@ -67,13 +80,13 @@ public class AntScript : MonoBehaviour
         Directions leftTurn = (Directions)(((int)currDirection - 1 + length) % length);
         Directions rightTurn = (Directions)(((int)currDirection + 1 + length) % length);
         if (currHex.neighbors[currDirection] == hex) {
-            score *= 2f;
+            score *= 10f;
         }
         else if (currHex.neighbors[leftTurn] == hex || currHex.neighbors[rightTurn] == hex)
         {
-            score *= 1.5f;
+            score *= 5f;
         }
-        
+
         return score;
     }
 
@@ -145,6 +158,11 @@ public class AntScript : MonoBehaviour
             foodCarried = (currHex.foodValue >= carrying_capacity) ? carrying_capacity : currHex.foodValue;
             currHex.foodValue -= foodCarried;
             pheromoneMode = PheromoneType.Forage;
+        }
+        else if (pheromoneMode == PheromoneType.Forage && currHex.isAnthill)
+        {
+            foodCarried = 0;
+            pheromoneMode = PheromoneType.Exploration;
         }
 
     }

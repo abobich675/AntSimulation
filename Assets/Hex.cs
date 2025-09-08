@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -21,6 +22,7 @@ public class Hex
         Exploration,
         Forage,
         Food,
+        Hill,
     }
 
     static public Dictionary<PheromoneType, float> MAX_PHEROMONES = new Dictionary<PheromoneType, float>
@@ -28,6 +30,7 @@ public class Hex
         { PheromoneType.Exploration, 1000 },
         { PheromoneType.Forage, 1000 },
         { PheromoneType.Food, 100 },
+        { PheromoneType.Hill, 100000 },
     };
 
     static public Dictionary<PheromoneType, float> SPREAD_PHEROMONES = new Dictionary<PheromoneType, float>
@@ -35,6 +38,7 @@ public class Hex
         { PheromoneType.Exploration, 0.001f },
         { PheromoneType.Forage, 0.001f },
         { PheromoneType.Food, 0.1f },
+        { PheromoneType.Hill, 0.15f },
     };
 
     // Variables
@@ -54,7 +58,7 @@ public class Hex
         this.tileMap = tileMap;
         this.cellPos = cellPos;
         this.foodValue = foodValue;
-        
+
         // Initialize all pheromone types with 0
         foreach (PheromoneType type in Enum.GetValues(typeof(PheromoneType)))
         {
@@ -104,6 +108,15 @@ public class Hex
         }
     }
 
+    private void HandleHill()
+    {
+        if (isAnthill)
+        {
+            SetPheromone(PheromoneType.Hill, MAX_PHEROMONES[PheromoneType.Hill]);
+            AddPheromone(PheromoneType.Hill, 1);
+        }
+    } 
+
     private void SpreadPheromones()
     {
 
@@ -131,6 +144,7 @@ public class Hex
         float red = GetPheromone(PheromoneType.Exploration) / (float)MAX_PHEROMONES[PheromoneType.Exploration] * 0.75f;
         red = Math.Max(Math.Min(red, 1), 0.3f);
         float green = GetPheromone(PheromoneType.Food) / (float)MAX_PHEROMONES[PheromoneType.Food] * 0.75f;
+        green += GetPheromone(PheromoneType.Hill) / (float)MAX_PHEROMONES[PheromoneType.Hill] * 0.75f;
         green = Math.Max(Math.Min(green, 1), 0.3f);
         float blue = GetPheromone(PheromoneType.Forage) / (float)MAX_PHEROMONES[PheromoneType.Forage] * 0.75f;
         blue = Math.Max(Math.Min(blue, 1), 0.3f);
@@ -142,6 +156,7 @@ public class Hex
     {
         SpreadPheromones();
         HandleFood();
+        HandleHill();
     }
 
     public void ApplyTick()

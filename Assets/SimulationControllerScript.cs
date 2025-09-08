@@ -120,8 +120,9 @@ public class SimulationControllerScript : MonoBehaviour
 
                     if (!anthillHexes.Contains(neighbor) && !neighborsToAdd.Contains(neighbor))
                     {
-                        neighborsToAdd.Add(neighbor);
+                        neighbor.isAnthill = true;
                         anthillMap.SetTile(hex.cellPos, anthillTile);
+                        neighborsToAdd.Add(neighbor);
                     }
                 }
             }
