@@ -6,7 +6,9 @@ using UnityEngine.Tilemaps;
 
 public class Hex
 {
-    // Enums
+    // ------------------------------------
+    // Enums & Dictionaries
+    // ------------------------------------
     public enum Directions
     {
         Top_Right,
@@ -41,21 +43,27 @@ public class Hex
         { PheromoneType.Hill, 0.15f },
     };
 
+    // ------------------------------------
     // Variables
+    // ------------------------------------
     public Dictionary<Directions, Hex> neighbors = new();
     public Vector3Int cellPos;
     public Tilemap tileMap;
+    public Tilemap foodMap;
 
     private Dictionary<PheromoneType, float> pheromones = new();
-    public float foodValue;
+    private float foodValue;
     public bool isAnthill;
 
     private Dictionary<PheromoneType, float> changes = new();
 
+    // ------------------------------------
     // Constructor
-    public Hex(Tilemap tileMap, Vector3Int cellPos, float foodValue)
+    // ------------------------------------
+    public Hex(Tilemap tileMap, Tilemap foodMap, Vector3Int cellPos, float foodValue)
     {
         this.tileMap = tileMap;
+        this.foodMap = foodMap;
         this.cellPos = cellPos;
         this.foodValue = foodValue;
 
@@ -67,14 +75,23 @@ public class Hex
         }
 
         // Initialize neighbors to null
-        Directions[] dirs = (Directions[])System.Enum.GetValues(typeof(Directions));
+        Directions[] dirs = (Directions[])Enum.GetValues(typeof(Directions));
         for (int i = 0; i < dirs.Length; i++)
         {
             neighbors[dirs[i]] = null;
         }
     }
 
+    // ------------------------------------
     // Methods
+    // ------------------------------------
+
+    public Vector3 GetWorldPos()
+    {
+        return tileMap.CellToWorld(cellPos);
+    }
+
+    // Pheromones
     public float GetPheromone(PheromoneType type)
     {
         return pheromones[type];
@@ -88,34 +105,7 @@ public class Hex
     public void AddPheromone(PheromoneType type, float amount)
     {
         changes[type] += amount;
-        if (!tileMap.HasTile(cellPos))
-        {
-            Debug.LogWarning($"No tile found at {cellPos}");
-        }
     }
-
-    public Vector3 GetWorldPos()
-    {
-        return tileMap.CellToWorld(cellPos);
-    }
-
-    private void HandleFood()
-    {
-        if (foodValue > 0)
-        {
-            SetPheromone(PheromoneType.Food, foodValue);
-            AddPheromone(PheromoneType.Food, 1);
-        }
-    }
-
-    private void HandleHill()
-    {
-        if (isAnthill)
-        {
-            SetPheromone(PheromoneType.Hill, MAX_PHEROMONES[PheromoneType.Hill]);
-            AddPheromone(PheromoneType.Hill, 1);
-        }
-    } 
 
     private void SpreadPheromones()
     {
@@ -139,18 +129,55 @@ public class Hex
         }
     }
 
+    // Food
+    public float GetFood()
+    {
+        return foodValue;
+    }
+
+    public void SetFood(float value)
+    {
+        foodValue = value;
+        if (foodValue <= 0) foodMap.SetTile(cellPos, null);
+    }
+
+    public void AddFood(float amount)
+    {
+        foodValue += amount;
+        if (foodValue <= 0) foodMap.SetTile(cellPos, null);
+    }
+
+    private void HandleFood()
+    {
+        if (foodValue > 0)
+        {
+            SetPheromone(PheromoneType.Food, foodValue);
+            AddPheromone(PheromoneType.Food, 1);
+        }
+    }
+    private void HandleHill()
+    {
+        if (isAnthill)
+        {
+            SetPheromone(PheromoneType.Hill, MAX_PHEROMONES[PheromoneType.Hill]);
+            AddPheromone(PheromoneType.Hill, 1);
+        }
+    } 
+
     private void HandleColor()
     {
         float red = GetPheromone(PheromoneType.Exploration) / (float)MAX_PHEROMONES[PheromoneType.Exploration] * 0.75f;
         red = Math.Max(Math.Min(red, 1), 0.3f);
         float green = GetPheromone(PheromoneType.Food) / (float)MAX_PHEROMONES[PheromoneType.Food] * 0.75f;
-        green += GetPheromone(PheromoneType.Hill) / (float)MAX_PHEROMONES[PheromoneType.Hill] * 0.75f;
+        // green += GetPheromone(PheromoneType.Hill) / (float)MAX_PHEROMONES[PheromoneType.Hill] * 0.75f;
         green = Math.Max(Math.Min(green, 1), 0.3f);
         float blue = GetPheromone(PheromoneType.Forage) / (float)MAX_PHEROMONES[PheromoneType.Forage] * 0.75f;
         blue = Math.Max(Math.Min(blue, 1), 0.3f);
 
         tileMap.SetColor(cellPos, new Color(red, green, blue));
     }
+
+    // Handling Ticks
 
     public void DoTick()
     {

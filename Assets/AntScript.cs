@@ -55,7 +55,7 @@ public class AntScript : MonoBehaviour
                 float foodCount = hex.GetPheromone(PheromoneType.Food) + 1;
                 score *= (float)Math.Pow(foodCount, 5) / Hex.MAX_PHEROMONES[PheromoneType.Food];
 
-                float isFood = hex.foodValue + 1;
+                float isFood = hex.GetFood() + 1;
                 score *= (float)Math.Pow(isFood, 5) / Hex.MAX_PHEROMONES[PheromoneType.Food];
                 break;
             
@@ -79,13 +79,12 @@ public class AntScript : MonoBehaviour
         int length = Enum.GetValues(typeof(Directions)).Length;
         Directions leftTurn = (Directions)(((int)currDirection - 1 + length) % length);
         Directions rightTurn = (Directions)(((int)currDirection + 1 + length) % length);
-        if (currHex.neighbors[currDirection] == hex) {
+        if (currHex.neighbors[currDirection] == hex)
             score *= 10f;
-        }
         else if (currHex.neighbors[leftTurn] == hex || currHex.neighbors[rightTurn] == hex)
-        {
-            score *= 5f;
-        }
+            score *= 2f;
+        else
+            score /= 10;
 
         return score;
     }
@@ -153,10 +152,10 @@ public class AntScript : MonoBehaviour
         transform.rotation = Quaternion.Euler(0, 0, -30 - (int)currDirection * 60);
         currHex.SetPheromone(pheromoneMode, Hex.MAX_PHEROMONES[pheromoneMode]);
 
-        if (pheromoneMode == PheromoneType.Exploration && currHex.foodValue > 0)
+        if (pheromoneMode == PheromoneType.Exploration && currHex.GetFood() > 0)
         {
-            foodCarried = (currHex.foodValue >= carrying_capacity) ? carrying_capacity : currHex.foodValue;
-            currHex.foodValue -= foodCarried;
+            foodCarried = (currHex.GetFood() >= carrying_capacity) ? carrying_capacity : currHex.GetFood();
+            currHex.AddFood(-foodCarried);
             pheromoneMode = PheromoneType.Forage;
         }
         else if (pheromoneMode == PheromoneType.Forage && currHex.isAnthill)

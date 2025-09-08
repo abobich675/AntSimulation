@@ -45679,11 +45679,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41123dfed95ea4133b7622987c1a0294, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  NUM_ANTS: 10
+  NUM_ANTS: 20
   SPAWN_DELAY: 0.01
   TICK_RATE: 10
-  CARRYING_CAPACITY: 0
-  ANTHILL_SIZE: 2
+  CARRYING_CAPACITY: 5
+  ANTHILL_SIZE: 3
   AntPrefab: {fileID: 8236214251664053382, guid: 982852da7d184408b96676181cf207fe, type: 3}
   anthillTile: {fileID: 11400000, guid: e4af9790701e94073944cc46d5537b58, type: 2}
   foodMap: {fileID: 1292863397}

@@ -48,7 +48,7 @@ public class SimulationControllerScript : MonoBehaviour
                     float foodValue = (foodTile != null) ? Hex.MAX_PHEROMONES[Hex.PheromoneType.Food] : 0;
 
                     // Create Hex
-                    Hex hex = new Hex(tileMap, cellPosition, foodValue);
+                    Hex hex = new Hex(tileMap, foodMap, cellPosition, foodValue);
                     hexes[cellPosition] = hex;
                 }
             }
